@@ -1,0 +1,46 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Function to load the Excel file
+def load_excel(file):
+    return pd.read_excel(file)
+
+# Function to plot the data with an optional highlighted point
+def plot_coordinates_with_highlight(df, x_col, y_col, z_col, name_col, highlight_name):
+    plt.figure(figsize=(10, 6))
+    
+    scatter = plt.scatter(df[x_col], df[y_col], c=df[z_col], cmap='viridis')
+    plt.colorbar(scatter, label=z_col)
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
+    plt.title(f'{x_col} vs {y_col} (colored by {z_col})')
+    
+    if highlight_name:
+        highlighted_point = df[df[name_col].str.contains(highlight_name, case=False)]
+        if not highlighted_point.empty:
+            plt.scatter(highlighted_point[x_col], highlighted_point[y_col], color='red', edgecolor='black', s=100, label=highlight_name)
+            plt.legend()
+    
+    plt.grid(True)
+    st.pyplot(plt)
+
+# Streamlit app
+st.title('Coordinate Plotter')
+
+# File upload
+uploaded_file = st.file_uploader("Choose an Excel file", type="xlsx")
+
+if uploaded_file is not None:
+    df = load_excel(uploaded_file)
+    st.write("Data Preview:")
+    st.write(df.head())
+    
+    x_col = st.selectbox('Select X column', df.columns)
+    y_col = st.selectbox('Select Y column', df.columns)
+    z_col = st.selectbox('Select Z column', df.columns)
+    name_col = st.selectbox('Select Name column', df.columns)
+    highlight_name = st.text_input('Enter name to highlight', '')
+
+    if st.button('Plot'):
+        plot_coordinates_with_highlight(df, x_col, y_col, z_col, name_col, highlight_name)
